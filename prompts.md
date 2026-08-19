@@ -198,3 +198,29 @@ debugging (fetch/CSS bug, 500-vs-401 fix, full removal) for a feature that was
 explicitly optional. If local dev-environment auth is this fragile to verify without
 being able to see the user's actual terminals/browser, it's worth asking upfront
 whether the stretch goal is worth the iteration cost before building it, not after.
+
+---
+
+## Post-slice-4 bug #4: "no such table: tasks" (500) — self-inflicted
+
+**Asked:** User pasted a traceback showing `sqlite3.OperationalError: no such table:
+tasks` on every `GET`/`POST /tasks` request.
+
+**Got back:** This one was on me, not the user. Throughout the earlier debugging
+turns I repeatedly ran `rm -f backend/data/tasks.db` as "cleanup" after my own
+verification runs — using the *same default path* the user's own live server was
+also using. Deleting that file out from under a running process doesn't restart it or
+re-trigger its startup schema creation; the next request just opens a fresh, empty
+SQLite file with no `tasks` table. Fixed by making the `get_db` FastAPI dependency
+run `CREATE TABLE IF NOT EXISTS` on every request (not just once at startup), so the
+app self-heals if the underlying file is ever deleted or replaced while running.
+Reproduced the exact failure locally (create a task, delete the file mid-session,
+confirm the next request used to 500 and now returns `200`/`[]` instead), added a
+regression test, verified live.
+
+**What I'd change:** Never run destructive filesystem cleanup (`rm -f <path>`)
+against a path a long-running process I don't control might also be using, even for
+"my own test scratch files" — should have used a distinct scratch path (a temp dir,
+or a port/DB-path suffix unique to my verification runs) for every manual check
+throughout this whole session, not reused the app's real default path. The
+self-healing fix is a good outcome, but the bug should never have been introduced.
