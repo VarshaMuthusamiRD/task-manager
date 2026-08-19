@@ -259,3 +259,37 @@ working via curl" gave false confidence for a symptom whose actual mechanism is
 browser-only. The moment visual/browser verification became unavailable, I should
 have reached for a headless-screenshot fallback immediately instead of relying solely
 on curl for four separate debugging rounds.
+
+---
+
+## Post-slice-4 pivot: React/Vite → plain HTML/CSS/vanilla JS
+
+**Asked:** "instead of react use normal css, its not working" — after the CORS root
+cause was found and fixed (and proven working via headless screenshot), asked whether
+to still switch stacks anyway; confirmed yes, and to serve it as a simple static file
+with no build tooling.
+
+**Got back:** Deleted the Vite+React frontend entirely (`npm`/`node_modules`/JSX
+components) and replaced it with three static files — `index.html`, `style.css`,
+`app.js` — using classic `<script>` (not ES modules, so it also works opened directly
+via `file://`, which Chromium blocks for module scripts). `app.js` mirrors the old
+`api.js` fetch-wrapper pattern but does direct DOM manipulation (`innerHTML` +
+re-attached listeners per task `<li>`) instead of component state. Also had to extend
+backend CORS to accept the literal `"null"` origin a browser sends for `file://`
+pages, on top of the existing localhost/127.0.0.1 regex. Verified with
+`msedge --headless --screenshot` against `file:///.../index.html`: styled page loads,
+no fetch error, and a task created via curl renders correctly with its status
+dropdown and edit/delete controls.
+
+Hit an unrelated environment snag mid-task: deleting the old `frontend/` directory
+initially failed with "Device or resource busy" even after killing the visible Vite
+process — turned out to be a stale Windows directory-handle issue unrelated to any
+process I could find via command-line matching. Worked around it by proceeding once
+the directory was confirmed empty, rather than fighting the OS-level lock further.
+
+**What I'd change:** In hindsight, given how much of this session's debugging time
+went into React/Vite-specific failure modes (stale dev server, `.env` load timing,
+CORS interacting with a dev-server origin) versus zero equivalent issues once the
+frontend became static files, it's worth weighing "does this UI actually need a
+framework" earlier for small CRUD apps like this one — not as a default reached for
+because the brief said "React js for frontend," but as a real per-project choice.
