@@ -49,11 +49,19 @@ required — see "Authentication" in `SPEC.md` for why.
 
 ### Troubleshooting
 
-- **"Failed to fetch" when creating/loading tasks:** `VITE_API_BASE_URL` in
-  `frontend/.env` must match the port the backend is actually running on, and the
-  backend must actually be running. Vite only reads `.env` at server startup — after
-  editing it, stop `npm run dev` (Ctrl+C) and start it again; it will not pick up the
-  change live.
+- **"Failed to fetch" when creating/loading tasks:** two common causes:
+  1. `VITE_API_BASE_URL` in `frontend/.env` doesn't match the port the backend is
+     actually running on, or the backend isn't running. Vite only reads `.env` at
+     server startup — after editing it, stop `npm run dev` (Ctrl+C) and start it
+     again; it will not pick up the change live.
+  2. **CORS.** The browser blocks the response if the page's origin isn't one the
+     backend allows — this can silently fail even though the backend responds `200`
+     (curl won't show this, since curl doesn't enforce CORS; only real browsers do).
+     By default the backend allows any `http://localhost:<port>` or
+     `http://127.0.0.1:<port>` origin, which covers the normal case. If you set
+     `FRONTEND_ORIGIN` explicitly, it must exactly match what's in the browser's
+     address bar (`localhost` and `127.0.0.1` are different origins to a browser even
+     though they're the same machine).
 - **Styles look wrong or a stray dev server:** if port 5173 is unexpectedly reported
   as "in use" when starting `npm run dev`, an old dev server process is likely still
   running with stale config baked in. Find and stop it (e.g. Task Manager on Windows,

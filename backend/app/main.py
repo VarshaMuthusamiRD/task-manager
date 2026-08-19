@@ -20,9 +20,11 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(title="Task Manager API", lifespan=lifespan)
+_frontend_origin = os.environ.get("FRONTEND_ORIGIN")
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[os.environ.get("FRONTEND_ORIGIN", "http://localhost:5173")],
+    allow_origins=[_frontend_origin] if _frontend_origin else [],
+    allow_origin_regex=None if _frontend_origin else r"http://(localhost|127\.0\.0\.1):\d+",
     allow_methods=["*"],
     allow_headers=["*"],
 )
