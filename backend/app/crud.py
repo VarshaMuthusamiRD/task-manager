@@ -1,7 +1,7 @@
 import sqlite3
 from datetime import datetime, timezone
 
-from app.models import TaskCreate
+from app.models import TaskCreate, TaskUpdate
 
 
 def _now_iso() -> str:
@@ -33,3 +33,25 @@ def list_tasks(conn: sqlite3.Connection) -> list[dict]:
 def get_task(conn: sqlite3.Connection, task_id: int) -> dict | None:
     row = conn.execute("SELECT * FROM tasks WHERE id = ?", (task_id,)).fetchone()
     return _row_to_dict(row) if row else None
+
+
+def update_task(conn: sqlite3.Connection, task_id: int, task: TaskUpdate) -> dict | None:
+    if get_task(conn, task_id) is None:
+        return None
+    conn.execute(
+        """
+        UPDATE tasks SET title = ?, description = ?, status = ?, updated_at = ?
+        WHERE id = ?
+        """,
+        (task.title, task.description, task.status.value, _now_iso(), task_id),
+    )
+    conn.commit()
+    return get_task(conn, task_id)
+
+
+def delete_task(conn: sqlite3.Connection, task_id: int) -> bool:
+    if get_task(conn, task_id) is None:
+        return False
+    conn.execute("DELETE FROM tasks WHERE id = ?", (task_id,))
+    conn.commit()
+    return True

@@ -15,6 +15,10 @@ class TaskCreate(BaseModel):
     status: TaskStatus = TaskStatus.todo
 
 
+class TaskUpdate(TaskCreate):
+    pass
+
+
 class TaskOut(BaseModel):
     id: int
     title: str
