@@ -224,3 +224,38 @@ against a path a long-running process I don't control might also be using, even 
 or a port/DB-path suffix unique to my verification runs) for every manual check
 throughout this whole session, not reused the app's real default path. The
 self-healing fix is a good outcome, but the bug should never have been introduced.
+
+---
+
+## Post-slice-4 bug #5: real root cause — CORS origin mismatch
+
+**Asked:** "there is no css loadingg, it looks like simple html" (still, after the
+db-file fix) — then "do deep reasearch on where and whats the issue" when a hard
+refresh and DevTools check didn't resolve it.
+
+**Got back:** Since the Claude browser extension was still not connecting, used
+`msedge --headless --disable-gpu --screenshot=... http://<url>` directly (Edge is
+already installed; no new dependency) to actually *see* the live page for the first
+time this session, instead of only curl-based inference. First screenshot (against
+`http://127.0.0.1:5173/`) showed the page **was** styled — bordered inputs, a real
+button, a large heading — with a visible "Failed to fetch" error, disproving the "CSS
+not loading" theory outright: it was always a fetch failure, and the "plain" look was
+just an intentionally minimal design plus a leftover oversized template `<h1>` style,
+made worse by the error blanking the task list. Took a second screenshot against
+`http://localhost:5173/` (the exact URL the README tells users to visit) — no error,
+full styled task list rendered. That difference nailed it: the backend's CORS
+`allow_origins` only had the exact string `http://localhost:5173`; a browser (unlike
+curl) treats `127.0.0.1` and `localhost` as different origins and silently blocks the
+fetch response when they don't match, even though the server itself returns `200`.
+Fixed by switching to an `allow_origin_regex` matching `localhost`/`127.0.0.1` on any
+port by default. Added 3 CORS regression tests (localhost allowed, 127.0.0.1 allowed,
+unrelated origin rejected) — 17/17 passing. Verified against the user's own live
+`--reload` process with a third screenshot proving `127.0.0.1` now works too.
+
+**What I'd change:** This should have been the very first hypothesis back when "failed
+to fetch" was first reported, not the fourth. All my earlier curl-based verification
+was structurally blind to this bug class — curl never enforces CORS, so "verified
+working via curl" gave false confidence for a symptom whose actual mechanism is
+browser-only. The moment visual/browser verification became unavailable, I should
+have reached for a headless-screenshot fallback immediately instead of relying solely
+on curl for four separate debugging rounds.
