@@ -79,3 +79,26 @@ auth tests. Verified manually against a live `uvicorn` process with real curl ca
 **What I'd change:** Deliberately skipped `python-dotenv` to avoid an unnecessary
 dependency — `.env.example` is a template, not auto-loaded; the README will need to
 say so explicitly (export the var or use a loader) so it's not assumed to "just work".
+
+---
+
+## Slice 4 — Frontend: React CRUD UI
+
+**Asked:** "move to slice 4" — build the React (Vite) CRUD UI: list, create form,
+inline edit, delete, status toggle, calling the backend with the API key header.
+
+**Got back:** Scaffolded with `npm create vite@latest frontend -- --template react`,
+then `src/api.js` (fetch wrapper attaching `X-API-Key`), `src/statuses.js`,
+`TaskForm.jsx`, `TaskItem.jsx` (inline edit + status `<select>` + delete),
+`TaskList.jsx`, and `App.jsx` tying them together with `useState`/`useEffect`. Also
+had to add `CORSMiddleware` to the backend (`main.py`) so the browser could call it
+from the Vite dev origin — not something a curl-only backend slice would have
+surfaced. Verified both `npm run dev` and `npm run build` succeed and the backend API
+they call is already curl-verified end to end.
+
+**What I'd change:** The Chrome browser extension wasn't connected in this
+environment, so I couldn't do an actual click-through verification in a browser —
+only confirmed the dev server serves without errors and the production build
+compiles. That's a real gap versus the plan's "exercise create/edit/delete/status
+toggle in browser" verification step; worth doing a manual pass once a browser is
+available, or setting up the browser extension before starting this slice next time.
