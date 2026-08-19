@@ -171,3 +171,30 @@ distinction in `SPEC.md` and the README.
 "fail closed" auth check that can't distinguish "not configured" from "wrong
 credentials" is a design smell worth testing for the first time a stretch-goal auth
 feature is built, not after a user hits it in the wild.
+
+---
+
+## Post-slice-4 bug #3: removing API-key auth entirely
+
+**Asked:** "its not working, lets do it without api key now first, do the required
+changes, make sure its working, use ecc if u want" — after the 500-vs-401 fix still
+didn't resolve it for the user, they asked to drop auth entirely rather than keep
+debugging environment mismatches.
+
+**Got back:** Removed `require_api_key`, deleted `app/auth.py` and
+`backend/tests/test_auth.py`, stripped the `X-API-Key` header and `VITE_API_KEY` from
+the frontend, and updated `SPEC.md`/`README.md`/`IMPLEMENTATION.md` to say
+`/tasks` is unauthenticated (with an honest note on *why* it was removed, not just
+that it was). Ran `ecc:python-reviewer` and `ecc:react-reviewer` in parallel against
+the diff before committing — both came back clean of leftover references; the React
+review also surfaced a few pre-existing, unrelated minor bugs in `TaskItem.jsx`
+(stale local state on prop refresh) worth a separate pass later. Verified end-to-end
+with curl (create/list/update/delete, zero auth headers) both against a fresh
+isolated backend and against what looked like the user's own live `--reload` process,
+which had already auto-picked up the fix.
+
+**What I'd change:** In hindsight, the auth stretch goal cost three rounds of
+debugging (fetch/CSS bug, 500-vs-401 fix, full removal) for a feature that was
+explicitly optional. If local dev-environment auth is this fragile to verify without
+being able to see the user's actual terminals/browser, it's worth asking upfront
+whether the stretch goal is worth the iteration cost before building it, not after.
