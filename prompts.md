@@ -60,3 +60,22 @@ then exercised get/update/delete against the live server.
 this branch on top of `feat/backend-create-list` instead of `main` — worth deciding
 up front whether to wait for each merge or stack branches, rather than re-deciding per
 slice.
+
+---
+
+## Slice 3 — Stretch: API-key authentication
+
+**Asked:** "move to slice 3" — add a static `X-API-Key` check on all `/tasks` routes,
+401 on missing/wrong key, with `.env.example` and tests for missing/wrong/correct key.
+
+**Got back:** `app/auth.py` with a `require_api_key` dependency reading `API_KEY` from
+`os.environ`; refactored `main.py` to an `APIRouter(prefix="/tasks",
+dependencies=[Depends(require_api_key)])` so the check applies once instead of on
+every route individually. Updated the `client` test fixture to set `API_KEY` and send
+a default `X-API-Key` header so all 13 prior tests kept passing unchanged, plus 3 new
+auth tests. Verified manually against a live `uvicorn` process with real curl calls
+(no key → 401, wrong key → 401, correct key → 200).
+
+**What I'd change:** Deliberately skipped `python-dotenv` to avoid an unnecessary
+dependency — `.env.example` is a template, not auto-loaded; the README will need to
+say so explicitly (export the var or use a loader) so it's not assumed to "just work".
