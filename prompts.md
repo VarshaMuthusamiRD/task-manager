@@ -102,3 +102,26 @@ only confirmed the dev server serves without errors and the production build
 compiles. That's a real gap versus the plan's "exercise create/edit/delete/status
 toggle in browser" verification step; worth doing a manual pass once a browser is
 available, or setting up the browser extension before starting this slice next time.
+
+---
+
+## Slice 5 — Docs + prompt journal wrap-up
+
+**Asked:** "move to Slice 5" — finalize `README.md` with setup instructions and
+example requests/responses, write `IMPLEMENTATION.md` explaining what was built, why,
+and how, and keep this journal current.
+
+**Got back:** A full `README.md` replacing the Slice 0 stub (backend/frontend setup,
+every endpoint with a `curl` example and its actual response, auth usage) and
+`IMPLEMENTATION.md` (design rationale for FastAPI/raw-sqlite3/static-API-key/no-ORM
+choices, plus a request-flow diagram from browser click through to SQLite). Verified
+every example in the README against a live server run rather than hand-writing
+plausible-looking JSON, and re-ran the full backend test suite (16/16 passing) as a
+final check before wrapping up.
+
+**What I'd change:** Looking back across all five slices, the biggest process gap was
+not having `gh` CLI or a connected browser extension available from the start — both
+had to be discovered mid-project and worked around (manual PR links; build-only
+verification for the frontend instead of a real click-through). Confirming tooling
+availability before slicing the plan would avoid re-explaining the same workaround
+each time.
