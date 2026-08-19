@@ -18,13 +18,6 @@ python -m venv .venv
 pip install -r requirements.txt
 ```
 
-Set an API key (required — there is no default):
-
-```bash
-export API_KEY=changeme          # macOS/Linux
-$env:API_KEY = "changeme"        # PowerShell
-```
-
 Run the server:
 
 ```bash
@@ -46,29 +39,21 @@ pytest
 ```bash
 cd frontend
 npm install
-cp .env.example .env   # then edit .env to match your API_KEY and backend URL
+cp .env.example .env   # then edit .env if your backend runs on a different URL
 npm run dev
 ```
 
 The UI is now at `http://localhost:5173`, talking to the backend URL configured in
-`.env` (`VITE_API_BASE_URL`, default `http://127.0.0.1:8000`) using `VITE_API_KEY` as
-the `X-API-Key` header on every request.
+`.env` (`VITE_API_BASE_URL`, default `http://127.0.0.1:8000`). No authentication is
+required — see "Authentication" in `SPEC.md` for why.
 
 ### Troubleshooting
 
-- **"Failed to fetch" when creating/loading tasks:** `VITE_API_KEY` in `frontend/.env`
-  must exactly match the `API_KEY` env var the backend was started with, and
-  `VITE_API_BASE_URL` must match the port the backend is actually running on.
-  Vite only reads `.env` at server startup — after editing it, stop `npm run dev`
-  (Ctrl+C) and start it again; it will not pick up the change live.
-- **"Invalid or missing API key" (401) even though you set `API_KEY`:** check which
-  terminal/window you set it in — env vars don't carry over between terminal
-  sessions. If you `export API_KEY=changeme` (or `$env:API_KEY = "changeme"`) in one
-  window and then run `uvicorn` in a different one, the server never sees it.
-  **A `500 Internal Server Error` with detail `"Server misconfigured: API_KEY is not
-  set"` (instead of a 401) means exactly this** — the backend itself has no `API_KEY`
-  configured, so no key you send will ever be accepted; set it in the same terminal
-  you run `uvicorn` in and restart it.
+- **"Failed to fetch" when creating/loading tasks:** `VITE_API_BASE_URL` in
+  `frontend/.env` must match the port the backend is actually running on, and the
+  backend must actually be running. Vite only reads `.env` at server startup — after
+  editing it, stop `npm run dev` (Ctrl+C) and start it again; it will not pick up the
+  change live.
 - **Styles look wrong or a stray dev server:** if port 5173 is unexpectedly reported
   as "in use" when starting `npm run dev`, an old dev server process is likely still
   running with stale config baked in. Find and stop it (e.g. Task Manager on Windows,
@@ -76,15 +61,13 @@ the `X-API-Key` header on every request.
 
 ## API reference
 
-All requests below assume `API_KEY=changeme` and the server running at
-`http://127.0.0.1:8000`. Every request must include `X-API-Key: changeme`; omitting it
-or sending the wrong value returns `401 Unauthorized`.
+All requests below assume the server is running at `http://127.0.0.1:8000`. No
+authentication is required.
 
 ### Create a task — `POST /tasks`
 
 ```bash
 curl -X POST http://127.0.0.1:8000/tasks \
-  -H "X-API-Key: changeme" \
   -H "Content-Type: application/json" \
   -d '{"title": "Buy milk", "description": "2% preferred", "status": "todo"}'
 ```
@@ -104,7 +87,7 @@ Status: `201 Created`. Missing/empty `title` or an invalid `status` returns `422
 ### List tasks — `GET /tasks`
 
 ```bash
-curl http://127.0.0.1:8000/tasks -H "X-API-Key: changeme"
+curl http://127.0.0.1:8000/tasks
 ```
 
 ```json
@@ -124,7 +107,7 @@ Status: `200 OK` (empty array `[]` if there are no tasks).
 ### Retrieve a task — `GET /tasks/{id}`
 
 ```bash
-curl http://127.0.0.1:8000/tasks/1 -H "X-API-Key: changeme"
+curl http://127.0.0.1:8000/tasks/1
 ```
 Status: `200 OK` with the task, or `404 Not Found` if the id doesn't exist.
 
@@ -132,7 +115,6 @@ Status: `200 OK` with the task, or `404 Not Found` if the id doesn't exist.
 
 ```bash
 curl -X PUT http://127.0.0.1:8000/tasks/1 \
-  -H "X-API-Key: changeme" \
   -H "Content-Type: application/json" \
   -d '{"title": "Buy milk", "description": "done", "status": "done"}'
 ```
@@ -152,7 +134,7 @@ Status: `200 OK`, `404 Not Found` for a missing id, `422` for an invalid payload
 ### Delete a task — `DELETE /tasks/{id}`
 
 ```bash
-curl -X DELETE http://127.0.0.1:8000/tasks/1 -H "X-API-Key: changeme"
+curl -X DELETE http://127.0.0.1:8000/tasks/1
 ```
 Status: `204 No Content`, or `404 Not Found` if the id doesn't exist.
 

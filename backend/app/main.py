@@ -4,7 +4,6 @@ from contextlib import asynccontextmanager
 from fastapi import APIRouter, Depends, FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.auth import require_api_key
 from app.crud import create_task, delete_task, get_task, list_tasks, update_task
 from app.db import get_connection, init_db
 from app.models import TaskCreate, TaskOut, TaskUpdate
@@ -27,7 +26,7 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-router = APIRouter(prefix="/tasks", dependencies=[Depends(require_api_key)])
+router = APIRouter(prefix="/tasks")
 
 
 def get_db():
