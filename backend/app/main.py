@@ -32,6 +32,7 @@ router = APIRouter(prefix="/tasks")
 def get_db():
     conn = get_connection()
     try:
+        init_db(conn)
         yield conn
     finally:
         conn.close()

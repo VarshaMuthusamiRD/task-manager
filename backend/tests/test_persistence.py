@@ -2,8 +2,17 @@ import os
 import tempfile
 
 from app.crud import create_task, list_tasks
-from app.db import get_connection, init_db
+from app.db import get_connection, get_db_path, init_db
 from app.models import TaskCreate
+
+
+def test_request_recreates_schema_if_db_file_was_deleted(client):
+    os.remove(get_db_path())
+
+    response = client.get("/tasks")
+
+    assert response.status_code == 200
+    assert response.json() == []
 
 
 def test_data_survives_reopening_the_database(monkeypatch):
