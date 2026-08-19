@@ -3,7 +3,8 @@
 ## Overview
 A REST API for managing tasks: create, list, retrieve, update, delete. Persistence
 via SQLite so data survives a process restart. Backend: Python (FastAPI). Frontend:
-React (Vite) CRUD UI consuming this API.
+a static HTML/CSS/vanilla JS CRUD UI consuming this API — no build step, no
+framework (originally React/Vite; replaced — see `prompts.md`).
 
 ## Data shape
 

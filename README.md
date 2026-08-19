@@ -1,13 +1,14 @@
 # Task Manager
 
-A small REST API for managing tasks (Python/FastAPI + SQLite), with a React (Vite)
-CRUD frontend. See `SPEC.md` for the full API spec and `IMPLEMENTATION.md` for what
-was built, why, and how the pieces fit together.
+A small REST API for managing tasks (Python/FastAPI + SQLite), with a plain
+HTML/CSS/vanilla-JS CRUD frontend — no build step, no framework. See `SPEC.md` for
+the full API spec and `IMPLEMENTATION.md` for what was built, why, and how the pieces
+fit together.
 
 ## Requirements
 
 - Python 3.11+
-- Node.js 18+ / npm
+- A modern browser (no Node.js/npm needed for the frontend)
 
 ## Backend setup
 
@@ -36,36 +37,33 @@ pytest
 
 ## Frontend setup
 
+No install step. Just open `frontend/index.html` directly in a browser (double-click
+it, or File → Open). It's three plain files: `index.html`, `style.css`, `app.js`.
+
+By default it talks to the backend at `http://127.0.0.1:8000`. If your backend runs
+somewhere else, edit the `API_BASE_URL` constant at the top of `frontend/app.js` and
+reload the page.
+
+If you'd rather serve it instead of opening the file directly (e.g. to test on
+another device), any static file server works, for example:
 ```bash
 cd frontend
-npm install
-cp .env.example .env   # then edit .env if your backend runs on a different URL
-npm run dev
+python -m http.server 5500
 ```
-
-The UI is now at `http://localhost:5173`, talking to the backend URL configured in
-`.env` (`VITE_API_BASE_URL`, default `http://127.0.0.1:8000`). No authentication is
-required — see "Authentication" in `SPEC.md` for why.
+then visit `http://127.0.0.1:5500`.
 
 ### Troubleshooting
 
 - **"Failed to fetch" when creating/loading tasks:** two common causes:
-  1. `VITE_API_BASE_URL` in `frontend/.env` doesn't match the port the backend is
-     actually running on, or the backend isn't running. Vite only reads `.env` at
-     server startup — after editing it, stop `npm run dev` (Ctrl+C) and start it
-     again; it will not pick up the change live.
+  1. `API_BASE_URL` at the top of `frontend/app.js` doesn't match the port the
+     backend is actually running on, or the backend isn't running.
   2. **CORS.** The browser blocks the response if the page's origin isn't one the
      backend allows — this can silently fail even though the backend responds `200`
      (curl won't show this, since curl doesn't enforce CORS; only real browsers do).
-     By default the backend allows any `http://localhost:<port>` or
-     `http://127.0.0.1:<port>` origin, which covers the normal case. If you set
-     `FRONTEND_ORIGIN` explicitly, it must exactly match what's in the browser's
-     address bar (`localhost` and `127.0.0.1` are different origins to a browser even
-     though they're the same machine).
-- **Styles look wrong or a stray dev server:** if port 5173 is unexpectedly reported
-  as "in use" when starting `npm run dev`, an old dev server process is likely still
-  running with stale config baked in. Find and stop it (e.g. Task Manager on Windows,
-  or `lsof -i :5173` / `kill` on macOS/Linux) before starting a fresh one.
+     By default the backend allows `http://localhost:<port>`, `http://127.0.0.1:<port>`,
+     and `null` (the origin a browser sends when a page is opened via `file://`), which
+     covers both ways of running the frontend. If you set `FRONTEND_ORIGIN`
+     explicitly, it must exactly match what's in the browser's address bar.
 
 ## API reference
 

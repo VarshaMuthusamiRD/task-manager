@@ -6,9 +6,12 @@ for someone who didn't watch the work happen.
 ## What was built
 
 A REST API for managing tasks (create, list, retrieve, update, delete), persisted in
-SQLite so data survives a server restart, with a React frontend that exercises the
-full CRUD flow. A static API-key check protects every `/tasks` route. The whole thing
-was built in six slices, each on its own branch, tested before the next slice began.
+SQLite so data survives a server restart, with a plain HTML/CSS/vanilla-JS frontend
+that exercises the full CRUD flow. The frontend started as a React (Vite) app and was
+later replaced — see "React, then plain HTML/CSS/JS" below. A static API-key check
+was also built and later removed. The whole thing was built in slices, each on its
+own branch, tested before the next slice began; see `prompts.md` for the full history
+including the mid-course pivots.
 
 ## Why these choices
 
@@ -39,25 +42,34 @@ environment variables are needed, but the app reads `os.environ` directly rather
 auto-loading `.env`. Adding a dependency just to read a text file felt unnecessary for
 a project this size; the README says explicitly how to set the variables instead.
 
-**React + Vite, plain `fetch`.** No state management library, no UI framework — the
-task list is small (a handful of tasks, five fields each), so `useState`/`useEffect`
-in `App.jsx` is enough to hold and refresh it. `fetch` needs no extra dependency at
-all.
+**React, then plain HTML/CSS/JS.** The frontend was originally built with React
+(Vite) — a reasonable default for a CRUD UI. In practice it introduced a chain of
+environment problems that were hard to diagnose remotely (a stray dev-server process
+serving stale config, a CORS origin mismatch that curl-based verification couldn't
+detect since curl doesn't enforce CORS) before actually being confirmed broken. After
+that debugging cost, and because this app's UI is genuinely simple — one form, one
+list, four operations — it was rewritten as three static files (`index.html`,
+`style.css`, `app.js`) with no build step, no framework, no dev server required at
+all. `app.js` uses the same `fetch`-wrapper pattern the React version used, just
+without JSX or component state; DOM updates are done directly (`innerHTML` on the
+relevant `<li>`, re-attaching event listeners) since there's no virtual DOM to do it
+for you. This removes an entire class of "did the build tool pick up my change"
+failure modes for a UI this small.
 
 ## How the pieces fit together
 
 ```
-frontend/ (React + Vite)          backend/ (FastAPI)
+frontend/ (static HTML/CSS/JS)    backend/ (FastAPI)
 +----------------------+           +---------------------------+
-| App.jsx               |  fetch    | main.py                   |
-|  +- TaskForm.jsx       |--/tasks-->|  APIRouter("/tasks")      |
-|  +- TaskList.jsx       |           |  +- create_task_endpoint |
-|  |   +- TaskItem.jsx   |           |  +- list_tasks_endpoint  |
-|  +- api.js (fetch      |           |  +- get_task_endpoint    |
-|      wrapper)          |           |  +- update_task_endpoint |
-+----------------------+           |  +- delete_task_endpoint |
-                                    +-----------+---------------+
-                                                | calls
+| index.html            |  fetch    | main.py                   |
+|  (form + task list)   |--/tasks-->|  APIRouter("/tasks")      |
+| app.js                |           |  +- create_task_endpoint |
+|  +- apiRequest()       |           |  +- list_tasks_endpoint  |
+|  +- renderTasks()      |           |  +- get_task_endpoint    |
+|  +- renderViewMode()   |           |  +- update_task_endpoint |
+|  +- renderEditMode()   |           |  +- delete_task_endpoint |
+| style.css              |           +-----------+---------------+
++----------------------+                       | calls
                                     +-----------v---------------+
                                     | crud.py                   |
                                     |  create/list/get/update/  |
@@ -71,11 +83,14 @@ frontend/ (React + Vite)          backend/ (FastAPI)
 ```
 
 **Request flow.** A browser action (submit the create form, click delete, change the
-status dropdown) calls a function in `api.js`, which sends a `fetch` request straight
-to the matching route handler in `main.py` (no auth check in front of it — see above).
-The handler calls into `crud.py`, which runs SQL against the connection it's given and
-returns a plain `dict`; FastAPI serializes that against the `TaskOut` Pydantic model
-into JSON.
+status dropdown) triggers an event listener in `app.js`, which calls `apiRequest()` —
+a small `fetch` wrapper — straight to the matching route handler in `main.py` (no
+auth check in front of it — see above). The handler calls into `crud.py`, which runs
+SQL against the connection it's given and returns a plain `dict`; FastAPI serializes
+that against the `TaskOut` Pydantic model into JSON. Back in the browser, `app.js`
+re-fetches the full list (`refresh()`) and re-renders the affected DOM rather than
+patching state in place — simple and correct for a list this small, at the cost of
+being less efficient than a diffing UI library for a much larger one.
 
 **Persistence.** Every request opens its own SQLite connection (via the `get_db`
 FastAPI dependency) and closes it when the request finishes — there's no long-lived
@@ -86,19 +101,28 @@ fresh connection and confirms a previously created task is still there.
 
 **Frontend<->backend contract.** The Task JSON shape (`id, title, description, status,
 created_at, updated_at`) is defined once in `SPEC.md` and mirrored on both sides: as
-Pydantic models (`TaskCreate`/`TaskUpdate`/`TaskOut`) in `models.py`, and as the plain
-objects `api.js` sends and receives. `statuses.js` on the frontend mirrors the
-`TaskStatus` enum on the backend so the status dropdown can never submit a value the
-backend would reject.
+Pydantic models (`TaskCreate`/`TaskUpdate`/`TaskOut`) in `models.py`, and as the
+`STATUS_LABELS` map plus the plain objects `app.js` sends and receives — the status
+`<select>` options are generated from that same map so the dropdown can never submit a
+value the backend would reject.
+
+**CORS.** Since the frontend has no fixed origin (it can be opened via `file://`,
+served from `127.0.0.1`, or `localhost`, depending on how you run it), the backend's
+CORS policy matches any `localhost`/`127.0.0.1` origin plus the literal `null` origin
+a browser sends for `file://` pages, rather than a single hardcoded URL. This was the
+actual root cause of an early "it's broken" report that looked like a CSS/rendering
+bug but was really the browser silently discarding a `200` response — see
+`prompts.md`.
 
 **Testing strategy.** Each backend slice added its own test file focused on that
-slice's endpoints (create/list, retrieve/update/delete) plus one dedicated
-persistence test — 13 tests total, covering the happy path and at least the two
+slice's endpoints (create/list, retrieve/update/delete) plus dedicated persistence
+and CORS tests — 17 tests total, covering the happy path and at least the two
 required failure modes (validation errors and missing-id 404s) for every mutating
-endpoint. The frontend was verified by running `npm run build` (catches compile/import
-errors) and `npm run dev` against a live backend; a full click-through in an actual
-browser window was not possible in the environment this was built in — see
-`prompts.md` for that caveat and how to close it.
+endpoint. The frontend has no automated tests (plain DOM manipulation, no test
+runner set up for it — see `prompts.md` for why that tradeoff was made); it was
+verified with real end-to-end checks instead: curl against the API plus
+headless-browser screenshots (`msedge --headless --screenshot`) of the actual
+rendered page, including the create/edit/delete/status-change flows.
 
 ## Known limitations
 

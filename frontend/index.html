@@ -2,12 +2,30 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>frontend</title>
+    <title>Task Manager</title>
+    <link rel="stylesheet" href="style.css" />
   </head>
   <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.jsx"></script>
+    <main class="app">
+      <h1>Task Manager</h1>
+
+      <form id="task-form" class="task-form">
+        <input id="task-title" type="text" placeholder="Task title" required />
+        <input id="task-description" type="text" placeholder="Description (optional)" />
+        <select id="task-status">
+          <option value="todo">To do</option>
+          <option value="in_progress">In progress</option>
+          <option value="done">Done</option>
+        </select>
+        <button type="submit">Add task</button>
+      </form>
+
+      <p id="form-error" class="error hidden"></p>
+      <p id="status-message" class="status"></p>
+      <ul id="task-list" class="task-list"></ul>
+    </main>
+
+    <script src="app.js"></script>
   </body>
 </html>
