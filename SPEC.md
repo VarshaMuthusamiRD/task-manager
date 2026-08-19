@@ -67,7 +67,11 @@ Responses:
 ## Authentication (stretch goal)
 All `/tasks` routes require a header `X-API-Key: <key>` matching a server-configured
 key (env var `API_KEY`, loaded via `.env`, no default in code). Missing or wrong key
-returns `401 Unauthorized`. This is a single shared static key — not per-user auth.
+returns `401 Unauthorized`. If the server itself has no `API_KEY` configured, every
+request returns `500 Internal Server Error` instead — this is a server misconfiguration,
+distinct from a client sending a bad key, and is reported separately so the two
+situations aren't indistinguishable from the response alone. This is a single shared
+static key — not per-user auth.
 
 ## Persistence
 SQLite file at `backend/data/tasks.db` (git-ignored). Schema created automatically on

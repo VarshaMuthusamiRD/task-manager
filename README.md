@@ -61,6 +61,14 @@ the `X-API-Key` header on every request.
   `VITE_API_BASE_URL` must match the port the backend is actually running on.
   Vite only reads `.env` at server startup — after editing it, stop `npm run dev`
   (Ctrl+C) and start it again; it will not pick up the change live.
+- **"Invalid or missing API key" (401) even though you set `API_KEY`:** check which
+  terminal/window you set it in — env vars don't carry over between terminal
+  sessions. If you `export API_KEY=changeme` (or `$env:API_KEY = "changeme"`) in one
+  window and then run `uvicorn` in a different one, the server never sees it.
+  **A `500 Internal Server Error` with detail `"Server misconfigured: API_KEY is not
+  set"` (instead of a 401) means exactly this** — the backend itself has no `API_KEY`
+  configured, so no key you send will ever be accepted; set it in the same terminal
+  you run `uvicorn` in and restart it.
 - **Styles look wrong or a stray dev server:** if port 5173 is unexpectedly reported
   as "in use" when starting `npm run dev`, an old dev server process is likely still
   running with stale config baked in. Find and stop it (e.g. Task Manager on Windows,
