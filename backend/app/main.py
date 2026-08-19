@@ -1,6 +1,8 @@
+import os
 from contextlib import asynccontextmanager
 
 from fastapi import APIRouter, Depends, FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
 
 from app.auth import require_api_key
 from app.crud import create_task, delete_task, get_task, list_tasks, update_task
@@ -19,6 +21,12 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(title="Task Manager API", lifespan=lifespan)
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[os.environ.get("FRONTEND_ORIGIN", "http://localhost:5173")],
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 router = APIRouter(prefix="/tasks", dependencies=[Depends(require_api_key)])
 
 
