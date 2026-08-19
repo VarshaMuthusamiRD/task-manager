@@ -54,6 +54,18 @@ The UI is now at `http://localhost:5173`, talking to the backend URL configured 
 `.env` (`VITE_API_BASE_URL`, default `http://127.0.0.1:8000`) using `VITE_API_KEY` as
 the `X-API-Key` header on every request.
 
+### Troubleshooting
+
+- **"Failed to fetch" when creating/loading tasks:** `VITE_API_KEY` in `frontend/.env`
+  must exactly match the `API_KEY` env var the backend was started with, and
+  `VITE_API_BASE_URL` must match the port the backend is actually running on.
+  Vite only reads `.env` at server startup — after editing it, stop `npm run dev`
+  (Ctrl+C) and start it again; it will not pick up the change live.
+- **Styles look wrong or a stray dev server:** if port 5173 is unexpectedly reported
+  as "in use" when starting `npm run dev`, an old dev server process is likely still
+  running with stale config baked in. Find and stop it (e.g. Task Manager on Windows,
+  or `lsof -i :5173` / `kill` on macOS/Linux) before starting a fresh one.
+
 ## API reference
 
 All requests below assume `API_KEY=changeme` and the server running at
