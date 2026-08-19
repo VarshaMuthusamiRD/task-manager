@@ -1,0 +1,124 @@
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  background: #f7f7f8;
+  color: #1a1a1a;
+}
+
+.app {
+  max-width: 640px;
+  margin: 2rem auto;
+  padding: 0 1rem;
+}
+
+h1 {
+  font-size: 1.75rem;
+  margin: 0 0 1.25rem;
+}
+
+.task-form {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+  flex-wrap: wrap;
+}
+
+.task-form input,
+.task-form select,
+.task-form button {
+  padding: 0.5rem 0.75rem;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  font-size: 0.95rem;
+}
+
+.task-form input {
+  flex: 1;
+  min-width: 140px;
+}
+
+.task-form button {
+  background: #2563eb;
+  color: white;
+  border-color: #2563eb;
+  cursor: pointer;
+}
+
+.task-form button:hover {
+  background: #1d4ed8;
+}
+
+.task-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.task-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem;
+  background: white;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+}
+
+.task-item.editing {
+  flex-wrap: wrap;
+}
+
+.task-main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.task-main strong {
+  word-break: break-word;
+}
+
+.task-main .description {
+  font-size: 0.85rem;
+  color: #666;
+  word-break: break-word;
+}
+
+.task-item select,
+.task-item input,
+.task-item button {
+  padding: 0.4rem 0.6rem;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  font-size: 0.9rem;
+}
+
+.task-item button {
+  cursor: pointer;
+  background: white;
+}
+
+.task-item button:hover {
+  background: #f0f0f0;
+}
+
+.error {
+  color: #c00;
+}
+
+.status {
+  color: #666;
+}
+
+.hidden {
+  display: none;
+}

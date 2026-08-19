@@ -3,7 +3,8 @@
 ## Overview
 A REST API for managing tasks: create, list, retrieve, update, delete. Persistence
 via SQLite so data survives a process restart. Backend: Python (FastAPI). Frontend:
-React (Vite) CRUD UI consuming this API.
+a static HTML/CSS/vanilla JS CRUD UI consuming this API — no build step, no
+framework (originally React/Vite; replaced — see `prompts.md`).
 
 ## Data shape
 
@@ -64,10 +65,11 @@ Responses:
 - `204 No Content` — deleted.
 - `404 Not Found` — no task with that id.
 
-## Authentication (stretch goal)
-All `/tasks` routes require a header `X-API-Key: <key>` matching a server-configured
-key (env var `API_KEY`, loaded via `.env`, no default in code). Missing or wrong key
-returns `401 Unauthorized`. This is a single shared static key — not per-user auth.
+## Authentication
+None currently. The `/tasks` routes are open. API-key authentication (the original
+stretch goal) was implemented, then removed after persistent local environment-
+variable mismatches made it unworkable to verify end-to-end during development — see
+`prompts.md` for the history. It can be re-added later if needed.
 
 ## Persistence
 SQLite file at `backend/data/tasks.db` (git-ignored). Schema created automatically on
