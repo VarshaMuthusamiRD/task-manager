@@ -125,3 +125,49 @@ had to be discovered mid-project and worked around (manual PR links; build-only
 verification for the frontend instead of a real click-through). Confirming tooling
 availability before slicing the plan would avoid re-explaining the same workaround
 each time.
+
+---
+
+## Post-slice-4 bug: "Failed to fetch" + CSS not loading
+
+**Asked:** User reported "failed to fetched, couldnt add task, also css not loading"
+while running the app themselves.
+
+**Got back:** Root cause was `frontend/.env` still holding leftover values from my
+Slice 4 manual testing (`127.0.0.1:8125` / `secret123`), plus a stray Vite dev-server
+process from that same testing that survived a `pkill` call and kept serving those
+stale values on port 5173. Fixed `.env`, force-killed the zombie process by PID, added
+`server: { host: true }` to `vite.config.js` (Vite was binding IPv6-loopback-only,
+which is likely how the stale process went unnoticed), and added a README
+troubleshooting section.
+
+**What I'd change:** Don't background dev servers with `command &` for "quick"
+manual verification without a guaranteed-reliable way to kill them afterward — on
+this machine `pkill -f` silently fails to stop node/python processes started that
+way. Should have killed by PID via PowerShell from the start.
+
+---
+
+## Post-slice-4 bug #2: "Invalid or missing API key" persists
+
+**Asked:** User still hit "invalid or missing api" after the fetch fix, questioned
+why API-key auth exists at all, and asked me to make it work, verify via the Chrome
+extension, and write tests for it.
+
+**Got back:** Clarified via AskUserQuestion: keep auth (it's the approved Slice 3
+stretch goal), add more *backend* tests rather than new frontend test tooling, and —
+since the Chrome extension still wasn't connecting on my end — have the user check
+their own browser with guidance from me instead. Found a real bug while investigating:
+`require_api_key` returned the same 401 whether the client sent a wrong key OR the
+server had no `API_KEY` configured at all — indistinguishable from the response,
+and the second case (a very plausible mistake: setting `API_KEY` in one terminal,
+running `uvicorn` in another) would 401 *every* request no matter what key was sent.
+Split it into `500` (server misconfigured) vs `401` (wrong client key), added 4 tests
+for the new edge cases (empty header, case sensitivity, unconfigured server key),
+verified all three response codes against a live server, and documented the
+distinction in `SPEC.md` and the README.
+
+**What I'd change:** This should have been caught during Slice 3 itself — a
+"fail closed" auth check that can't distinguish "not configured" from "wrong
+credentials" is a design smell worth testing for the first time a stretch-goal auth
+feature is built, not after a user hits it in the wild.
