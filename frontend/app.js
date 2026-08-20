@@ -56,20 +56,42 @@ function escapeHtml(text) {
   return div.innerHTML;
 }
 
+const EDIT_ICON =
+  '<svg viewBox="0 0 20 20" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 16.5l1-4L13 4.5l3 3-8 8-4 1z"/></svg>';
+const DELETE_ICON =
+  '<svg viewBox="0 0 20 20" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M5 6h10M8 6V4.5A1.5 1.5 0 019.5 3h1A1.5 1.5 0 0112 4.5V6m-6 0v9a1 1 0 001 1h6a1 1 0 001-1V6"/></svg>';
+
 function renderViewMode(li, task) {
-  li.classList.remove("editing");
+  li.className = `task-item status-${task.status}`;
   li.innerHTML = `
+    <span
+      class="task-checkbox"
+      data-status="${task.status}"
+      role="button"
+      tabindex="0"
+      aria-label="${task.status === "done" ? "Mark as not done" : "Mark as done"}"
+    >${task.status === "done" ? "✓" : ""}</span>
     <div class="task-main">
       <strong>${escapeHtml(task.title)}</strong>
       ${task.description ? `<span class="description">${escapeHtml(task.description)}</span>` : ""}
     </div>
-    <select class="status-select">${statusOptionsHtml(task.status)}</select>
-    <button type="button" class="edit-btn">Edit</button>
-    <button type="button" class="delete-btn">Delete</button>
+    <select class="status-select" data-status="${task.status}" aria-label="Change status">${statusOptionsHtml(task.status)}</select>
+    <div class="task-actions">
+      <button type="button" class="edit-btn" aria-label="Edit task">${EDIT_ICON}</button>
+      <button type="button" class="delete-btn" aria-label="Delete task">${DELETE_ICON}</button>
+    </div>
   `;
   li.querySelector(".status-select").addEventListener("change", (e) =>
     handleStatusChange(task, e.target.value)
   );
+  const checkbox = li.querySelector(".task-checkbox");
+  checkbox.addEventListener("click", () => handleToggleDone(task));
+  checkbox.addEventListener("keydown", (e) => {
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      handleToggleDone(task);
+    }
+  });
   li.querySelector(".edit-btn").addEventListener("click", () => renderEditMode(li, task));
   li.querySelector(".delete-btn").addEventListener("click", () => handleDelete(task.id));
 }
@@ -99,6 +121,11 @@ async function handleStatusChange(task, status) {
   }
 }
 
+function handleToggleDone(task) {
+  const nextStatus = task.status === "done" ? "todo" : "done";
+  return handleStatusChange(task, nextStatus);
+}
+
 async function handleSaveEdit(li, task, updatedFields) {
   try {
     await updateTask(task.id, updatedFields);
@@ -117,15 +144,29 @@ async function handleDelete(id) {
   }
 }
 
+function updateProgress(tasks) {
+  const total = tasks.length;
+  const done = tasks.filter((t) => t.status === "done").length;
+  const countEl = document.getElementById("progress-count");
+  const ringEl = document.getElementById("progress-ring-fill");
+  if (countEl) countEl.textContent = `${done}/${total}`;
+  if (ringEl) {
+    const circumference = 2 * Math.PI * 15;
+    const fraction = total === 0 ? 0 : done / total;
+    ringEl.style.strokeDasharray = `${circumference}`;
+    ringEl.style.strokeDashoffset = `${circumference * (1 - fraction)}`;
+  }
+}
+
 function renderTasks(tasks) {
+  updateProgress(tasks);
   taskListEl.innerHTML = "";
   if (tasks.length === 0) {
-    taskListEl.innerHTML = `<li class="status">No tasks yet — add one above.</li>`;
+    taskListEl.innerHTML = `<li class="empty-state">🌱 No tasks yet — add one above.</li>`;
     return;
   }
   for (const task of tasks) {
     const li = document.createElement("li");
-    li.className = "task-item";
     taskListEl.appendChild(li);
     renderViewMode(li, task);
   }

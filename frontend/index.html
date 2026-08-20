@@ -4,26 +4,70 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Task Manager</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
     <link rel="stylesheet" href="style.css" />
   </head>
   <body>
+    <div class="blobs" aria-hidden="true">
+      <span class="blob blob-a"></span>
+      <span class="blob blob-b"></span>
+      <span class="blob blob-c"></span>
+    </div>
+
     <main class="app">
-      <h1>Task Manager</h1>
+      <header class="app-header">
+        <div class="app-title">
+          <span class="app-badge" aria-hidden="true">🌱</span>
+          <div>
+            <h1>Tasks</h1>
+            <p class="app-subtitle">Grow your day, one task at a time</p>
+          </div>
+        </div>
+        <div class="progress-card">
+          <svg class="progress-ring" width="40" height="40" viewBox="0 0 36 36" aria-hidden="true">
+            <circle class="progress-ring-bg" cx="18" cy="18" r="15" />
+            <circle id="progress-ring-fill" class="progress-ring-fill" cx="18" cy="18" r="15" />
+          </svg>
+          <div class="progress-text">
+            <strong id="progress-count">0/0</strong>
+            <span>done today</span>
+          </div>
+        </div>
+      </header>
 
       <form id="task-form" class="task-form">
-        <input id="task-title" type="text" placeholder="Task title" required />
-        <input id="task-description" type="text" placeholder="Description (optional)" />
-        <select id="task-status">
-          <option value="todo">To do</option>
-          <option value="in_progress">In progress</option>
-          <option value="done">Done</option>
-        </select>
-        <button type="submit">Add task</button>
+        <div class="task-form-fields">
+          <label class="sr-only" for="task-title">Task title</label>
+          <input id="task-title" type="text" placeholder="Task title" required />
+          <label class="sr-only" for="task-description">Description</label>
+          <input id="task-description" type="text" placeholder="Description (optional)" />
+        </div>
+        <div class="task-form-footer">
+          <label class="sr-only" for="task-status">Status</label>
+          <select id="task-status">
+            <option value="todo">To do</option>
+            <option value="in_progress">In progress</option>
+            <option value="done">Done</option>
+          </select>
+          <button type="submit">
+            <span class="icon" aria-hidden="true">+</span>
+            Add task
+          </button>
+        </div>
       </form>
 
       <p id="form-error" class="error hidden"></p>
       <p id="status-message" class="status"></p>
       <ul id="task-list" class="task-list"></ul>
+
+      <footer class="app-footer">
+        <p>🌿 Keep going — every small task helps you grow.</p>
+      </footer>
     </main>
 
     <script src="app.js"></script>
