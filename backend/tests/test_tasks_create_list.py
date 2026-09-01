@@ -46,3 +46,16 @@ def test_list_returns_created_tasks(client):
     assert response.status_code == 200
     titles = [task["title"] for task in response.json()]
     assert titles == ["First", "Second"]
+
+
+def test_list_order_is_unaffected_by_priority(client):
+    # Created out of priority order (low, high, medium) — the list must still
+    # come back in creation order, proving priority is never a sort key.
+    client.post("/tasks", json={"title": "First", "priority": "low"})
+    client.post("/tasks", json={"title": "Second", "priority": "high"})
+    client.post("/tasks", json={"title": "Third", "priority": "medium"})
+
+    response = client.get("/tasks")
+    assert response.status_code == 200
+    titles = [task["title"] for task in response.json()]
+    assert titles == ["First", "Second", "Third"]

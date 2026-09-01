@@ -46,6 +46,12 @@ def test_update_task_missing_priority_returns_422(client):
     assert response.status_code == 422
 
 
+def test_update_task_invalid_priority_returns_422(client):
+    created = _create(client)
+    response = client.put(f"/tasks/{created['id']}", json={"title": "Task", "priority": "urgent"})
+    assert response.status_code == 422
+
+
 def test_delete_task_happy_path(client):
     created = _create(client)
     response = client.delete(f"/tasks/{created['id']}")
