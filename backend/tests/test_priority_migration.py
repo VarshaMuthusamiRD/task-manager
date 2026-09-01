@@ -97,3 +97,27 @@ def test_migrate_add_priority_column_reraises_unrelated_operational_errors():
 
     with pytest.raises(sqlite3.OperationalError, match="database is locked"):
         _migrate_add_priority_column(fake_conn)
+
+
+def test_get_tasks_via_api_backfills_priority_on_legacy_database(monkeypatch):
+    # Proves the migration also works through the real request path (main.py's
+    # get_db() dependency), not just via direct app.db function calls.
+    fd, path = tempfile.mkstemp(suffix=".db")
+    os.close(fd)
+    _create_legacy_schema(path)
+    monkeypatch.setenv("TASKS_DB_PATH", path)
+
+    from fastapi.testclient import TestClient
+
+    from app.main import app
+
+    try:
+        with TestClient(app) as test_client:
+            response = test_client.get("/tasks")
+            assert response.status_code == 200
+            body = response.json()
+            assert len(body) == 1
+            assert body[0]["title"] == "Pre-existing task"
+            assert body[0]["priority"] == "medium"
+    finally:
+        os.remove(path)
