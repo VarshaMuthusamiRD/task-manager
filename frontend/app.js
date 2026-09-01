@@ -6,6 +6,12 @@ const STATUS_LABELS = {
   done: "Done",
 };
 
+const PRIORITY_LABELS = {
+  low: "Low",
+  medium: "Medium",
+  high: "High",
+};
+
 const taskListEl = document.getElementById("task-list");
 const formEl = document.getElementById("task-form");
 const formErrorEl = document.getElementById("form-error");
@@ -43,6 +49,15 @@ function deleteTask(id) {
 
 function statusOptionsHtml(selected) {
   return Object.entries(STATUS_LABELS)
+    .map(([value, label]) => {
+      const isSelected = value === selected ? "selected" : "";
+      return `<option value="${value}" ${isSelected}>${label}</option>`;
+    })
+    .join("");
+}
+
+function priorityOptionsHtml(selected) {
+  return Object.entries(PRIORITY_LABELS)
     .map(([value, label]) => {
       const isSelected = value === selected ? "selected" : "";
       return `<option value="${value}" ${isSelected}>${label}</option>`;
@@ -192,9 +207,10 @@ formEl.addEventListener("submit", async (event) => {
   const title = document.getElementById("task-title").value;
   const description = document.getElementById("task-description").value;
   const status = document.getElementById("task-status").value;
+  const priority = document.getElementById("task-priority").value;
 
   try {
-    await createTask({ title, description, status });
+    await createTask({ title, description, status, priority });
     formEl.reset();
     await refresh();
   } catch (err) {
