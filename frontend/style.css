@@ -20,6 +20,12 @@
 
   --color-error: #ba1a1a;
 
+  --color-priority-medium: #1d4ed8;
+  --color-priority-medium-bg: #dbeafe;
+  --color-priority-medium-border: #93c5fd;
+  --color-priority-high-bg: #fee2e2;
+  --color-priority-high-border: #fca5a5;
+
   --radius-card: 12px;
   --radius-pill: 999px;
   --radius-control: 8px;
@@ -486,15 +492,15 @@ h1 {
 }
 
 .priority-select[data-priority="medium"] {
-  background-color: var(--color-tertiary-bg);
-  color: var(--color-tertiary);
-  border-color: var(--color-tertiary-border);
+  background-color: var(--color-priority-medium-bg);
+  color: var(--color-priority-medium);
+  border-color: var(--color-priority-medium-border);
 }
 
 .priority-select[data-priority="high"] {
-  background-color: #fee2e2;
+  background-color: var(--color-priority-high-bg);
   color: var(--color-error);
-  border-color: #fca5a5;
+  border-color: var(--color-priority-high-border);
 }
 
 .task-actions {
