@@ -296,6 +296,29 @@ h1 {
   line-height: 1;
 }
 
+.priority-filter {
+  display: flex;
+  gap: var(--space-md);
+  align-items: center;
+  border: none;
+  padding: 0;
+  margin: 0 0 var(--space-md);
+}
+
+.priority-filter-option {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  font-size: 0.8rem;
+  color: var(--color-on-surface-variant);
+  cursor: pointer;
+}
+
+.priority-filter-checkbox {
+  accent-color: var(--color-primary);
+  cursor: pointer;
+}
+
 .task-list {
   list-style: none;
   padding: 0;

@@ -16,6 +16,21 @@ const taskListEl = document.getElementById("task-list");
 const formEl = document.getElementById("task-form");
 const formErrorEl = document.getElementById("form-error");
 const statusMessageEl = document.getElementById("status-message");
+const priorityFilterCheckboxes = document.querySelectorAll(".priority-filter-checkbox");
+
+let allTasks = [];
+
+function activePriorityFilters() {
+  return new Set(
+    Array.from(priorityFilterCheckboxes)
+      .filter((checkbox) => checkbox.checked)
+      .map((checkbox) => checkbox.value)
+  );
+}
+
+function applyPriorityFilter(tasks, activeFilters) {
+  return tasks.filter((task) => activeFilters.has(task.priority));
+}
 
 async function apiRequest(path, options = {}) {
   const response = await fetch(`${API_BASE_URL}${path}`, {
@@ -198,12 +213,17 @@ function updateProgress(tasks) {
 
 function renderTasks(tasks) {
   updateProgress(tasks);
+  const filtered = applyPriorityFilter(tasks, activePriorityFilters());
   taskListEl.innerHTML = "";
-  if (tasks.length === 0) {
-    taskListEl.innerHTML = `<li class="empty-state">🌱 No tasks yet — add one above.</li>`;
+  if (filtered.length === 0) {
+    const message =
+      tasks.length === 0
+        ? "🌱 No tasks yet — add one above."
+        : "No tasks match the selected priority filters.";
+    taskListEl.innerHTML = `<li class="empty-state">${message}</li>`;
     return;
   }
-  for (const task of tasks) {
+  for (const task of filtered) {
     const li = document.createElement("li");
     taskListEl.appendChild(li);
     renderViewMode(li, task);
@@ -213,15 +233,19 @@ function renderTasks(tasks) {
 async function refresh() {
   statusMessageEl.textContent = "Loading…";
   try {
-    const tasks = await listTasks();
+    allTasks = await listTasks();
     statusMessageEl.textContent = "";
-    renderTasks(tasks);
+    renderTasks(allTasks);
   } catch (err) {
     statusMessageEl.textContent = "";
     formErrorEl.textContent = err.message;
     formErrorEl.classList.remove("hidden");
   }
 }
+
+priorityFilterCheckboxes.forEach((checkbox) =>
+  checkbox.addEventListener("change", () => renderTasks(allTasks))
+);
 
 formEl.addEventListener("submit", async (event) => {
   event.preventDefault();

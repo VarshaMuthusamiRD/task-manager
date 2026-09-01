@@ -68,6 +68,22 @@
         </div>
       </form>
 
+      <fieldset class="priority-filter">
+        <legend class="sr-only">Filter by priority</legend>
+        <label class="priority-filter-option">
+          <input type="checkbox" class="priority-filter-checkbox" value="low" checked />
+          Low
+        </label>
+        <label class="priority-filter-option">
+          <input type="checkbox" class="priority-filter-checkbox" value="medium" checked />
+          Medium
+        </label>
+        <label class="priority-filter-option">
+          <input type="checkbox" class="priority-filter-checkbox" value="high" checked />
+          High
+        </label>
+      </fieldset>
+
       <p id="form-error" class="error hidden"></p>
       <p id="status-message" class="status"></p>
       <ul id="task-list" class="task-list"></ul>
