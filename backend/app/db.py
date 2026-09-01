@@ -30,4 +30,11 @@ def init_db(conn: sqlite3.Connection) -> None:
         )
         """
     )
+    _migrate_add_priority_column(conn)
     conn.commit()
+
+
+def _migrate_add_priority_column(conn: sqlite3.Connection) -> None:
+    columns = {row["name"] for row in conn.execute("PRAGMA table_info(tasks)")}
+    if "priority" not in columns:
+        conn.execute("ALTER TABLE tasks ADD COLUMN priority TEXT NOT NULL DEFAULT 'medium'")
