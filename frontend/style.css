@@ -20,6 +20,12 @@
 
   --color-error: #ba1a1a;
 
+  --color-priority-medium: #1d4ed8;
+  --color-priority-medium-bg: #dbeafe;
+  --color-priority-medium-border: #93c5fd;
+  --color-priority-high-bg: #fee2e2;
+  --color-priority-high-border: #fca5a5;
+
   --radius-card: 12px;
   --radius-pill: 999px;
   --radius-control: 8px;
@@ -296,6 +302,29 @@ h1 {
   line-height: 1;
 }
 
+.priority-filter {
+  display: flex;
+  gap: var(--space-md);
+  align-items: center;
+  border: none;
+  padding: 0;
+  margin: 0 0 var(--space-md);
+}
+
+.priority-filter-option {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  font-size: 0.8rem;
+  color: var(--color-on-surface-variant);
+  cursor: pointer;
+}
+
+.priority-filter-checkbox {
+  accent-color: var(--color-primary);
+  cursor: pointer;
+}
+
 .task-list {
   list-style: none;
   padding: 0;
@@ -341,6 +370,10 @@ h1 {
 
 .task-item.status-done:hover {
   opacity: 1;
+}
+
+.task-item.priority-high {
+  border-left-width: 6px;
 }
 
 .task-item.editing {
@@ -432,6 +465,42 @@ h1 {
 .status-select[data-status="done"] {
   background-color: var(--color-surface-container-high);
   color: var(--color-on-surface-variant);
+}
+
+.priority-select {
+  appearance: none;
+  border: 1px solid var(--color-outline-variant);
+  border-radius: var(--radius-pill);
+  padding: 4px 26px 4px 12px;
+  font-size: 0.7rem;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  cursor: pointer;
+  background-color: var(--color-surface-container);
+  color: var(--color-on-surface);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%236b8778' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 6px center;
+  background-size: 12px;
+  flex-shrink: 0;
+}
+
+.priority-select[data-priority="low"] {
+  background-color: var(--color-surface-container-high);
+  color: var(--color-primary-hover);
+  border-color: var(--color-primary-fixed);
+}
+
+.priority-select[data-priority="medium"] {
+  background-color: var(--color-priority-medium-bg);
+  color: var(--color-priority-medium);
+  border-color: var(--color-priority-medium-border);
+}
+
+.priority-select[data-priority="high"] {
+  background-color: var(--color-priority-high-bg);
+  color: var(--color-error);
+  border-color: var(--color-priority-high-border);
 }
 
 .task-actions {

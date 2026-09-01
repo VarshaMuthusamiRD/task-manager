@@ -30,4 +30,17 @@ def init_db(conn: sqlite3.Connection) -> None:
         )
         """
     )
+    _migrate_add_priority_column(conn)
     conn.commit()
+
+
+def _migrate_add_priority_column(conn: sqlite3.Connection) -> None:
+    columns = {row["name"] for row in conn.execute("PRAGMA table_info(tasks)")}
+    if "priority" not in columns:
+        try:
+            conn.execute("ALTER TABLE tasks ADD COLUMN priority TEXT NOT NULL DEFAULT 'medium'")
+        except sqlite3.OperationalError as exc:
+            # Another concurrent request already added the column between our
+            # PRAGMA check and this ALTER TABLE; the column now exists either way.
+            if "duplicate column name" not in str(exc):
+                raise

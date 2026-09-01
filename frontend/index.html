@@ -48,6 +48,13 @@
           <input id="task-description" type="text" placeholder="Description (optional)" />
         </div>
         <div class="task-form-footer">
+          <label class="sr-only" for="task-priority">Priority</label>
+          <select id="task-priority" required>
+            <option value="" disabled selected>Priority</option>
+            <option value="low">Low</option>
+            <option value="medium">Medium</option>
+            <option value="high">High</option>
+          </select>
           <label class="sr-only" for="task-status">Status</label>
           <select id="task-status">
             <option value="todo">To do</option>
@@ -60,6 +67,22 @@
           </button>
         </div>
       </form>
+
+      <fieldset class="priority-filter">
+        <legend class="sr-only">Filter by priority</legend>
+        <label class="priority-filter-option">
+          <input type="checkbox" class="priority-filter-checkbox" value="low" checked />
+          Low
+        </label>
+        <label class="priority-filter-option">
+          <input type="checkbox" class="priority-filter-checkbox" value="medium" checked />
+          Medium
+        </label>
+        <label class="priority-filter-option">
+          <input type="checkbox" class="priority-filter-checkbox" value="high" checked />
+          High
+        </label>
+      </fieldset>
 
       <p id="form-error" class="error hidden"></p>
       <p id="status-message" class="status"></p>

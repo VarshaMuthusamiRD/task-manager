@@ -6,10 +6,31 @@ const STATUS_LABELS = {
   done: "Done",
 };
 
+const PRIORITY_LABELS = {
+  low: "Low",
+  medium: "Medium",
+  high: "High",
+};
+
 const taskListEl = document.getElementById("task-list");
 const formEl = document.getElementById("task-form");
 const formErrorEl = document.getElementById("form-error");
 const statusMessageEl = document.getElementById("status-message");
+const priorityFilterCheckboxes = document.querySelectorAll(".priority-filter-checkbox");
+
+let allTasks = [];
+
+function activePriorityFilters() {
+  return new Set(
+    Array.from(priorityFilterCheckboxes)
+      .filter((checkbox) => checkbox.checked)
+      .map((checkbox) => checkbox.value)
+  );
+}
+
+function applyPriorityFilter(tasks, activeFilters) {
+  return tasks.filter((task) => activeFilters.has(task.priority));
+}
 
 async function apiRequest(path, options = {}) {
   const response = await fetch(`${API_BASE_URL}${path}`, {
@@ -50,6 +71,15 @@ function statusOptionsHtml(selected) {
     .join("");
 }
 
+function priorityOptionsHtml(selected) {
+  return Object.entries(PRIORITY_LABELS)
+    .map(([value, label]) => {
+      const isSelected = value === selected ? "selected" : "";
+      return `<option value="${value}" ${isSelected}>${label}</option>`;
+    })
+    .join("");
+}
+
 function escapeHtml(text) {
   const div = document.createElement("div");
   div.textContent = text;
@@ -62,7 +92,7 @@ const DELETE_ICON =
   '<svg viewBox="0 0 20 20" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M5 6h10M8 6V4.5A1.5 1.5 0 019.5 3h1A1.5 1.5 0 0112 4.5V6m-6 0v9a1 1 0 001 1h6a1 1 0 001-1V6"/></svg>';
 
 function renderViewMode(li, task) {
-  li.className = `task-item status-${task.status}`;
+  li.className = `task-item status-${task.status} priority-${task.priority}`;
   li.innerHTML = `
     <span
       class="task-checkbox"
@@ -75,12 +105,16 @@ function renderViewMode(li, task) {
       <strong>${escapeHtml(task.title)}</strong>
       ${task.description ? `<span class="description">${escapeHtml(task.description)}</span>` : ""}
     </div>
+    <select class="priority-select" data-priority="${task.priority}" aria-label="Change priority">${priorityOptionsHtml(task.priority)}</select>
     <select class="status-select" data-status="${task.status}" aria-label="Change status">${statusOptionsHtml(task.status)}</select>
     <div class="task-actions">
       <button type="button" class="edit-btn" aria-label="Edit task">${EDIT_ICON}</button>
       <button type="button" class="delete-btn" aria-label="Delete task">${DELETE_ICON}</button>
     </div>
   `;
+  li.querySelector(".priority-select").addEventListener("change", (e) =>
+    handlePriorityChange(task, e.target.value)
+  );
   li.querySelector(".status-select").addEventListener("change", (e) =>
     handleStatusChange(task, e.target.value)
   );
@@ -107,14 +141,19 @@ function renderEditMode(li, task) {
   li.querySelector(".save-btn").addEventListener("click", () => {
     const title = li.querySelector(".edit-title").value;
     const description = li.querySelector(".edit-description").value;
-    handleSaveEdit(li, task, { title, description, status: task.status });
+    handleSaveEdit(li, task, { title, description, status: task.status, priority: task.priority });
   });
   li.querySelector(".cancel-btn").addEventListener("click", () => renderViewMode(li, task));
 }
 
 async function handleStatusChange(task, status) {
   try {
-    await updateTask(task.id, { title: task.title, description: task.description, status });
+    await updateTask(task.id, {
+      title: task.title,
+      description: task.description,
+      status,
+      priority: task.priority,
+    });
     await refresh();
   } catch (err) {
     statusMessageEl.textContent = err.message;
@@ -124,6 +163,20 @@ async function handleStatusChange(task, status) {
 function handleToggleDone(task) {
   const nextStatus = task.status === "done" ? "todo" : "done";
   return handleStatusChange(task, nextStatus);
+}
+
+async function handlePriorityChange(task, priority) {
+  try {
+    await updateTask(task.id, {
+      title: task.title,
+      description: task.description,
+      status: task.status,
+      priority,
+    });
+    await refresh();
+  } catch (err) {
+    statusMessageEl.textContent = err.message;
+  }
 }
 
 async function handleSaveEdit(li, task, updatedFields) {
@@ -160,12 +213,17 @@ function updateProgress(tasks) {
 
 function renderTasks(tasks) {
   updateProgress(tasks);
+  const filtered = applyPriorityFilter(tasks, activePriorityFilters());
   taskListEl.innerHTML = "";
-  if (tasks.length === 0) {
-    taskListEl.innerHTML = `<li class="empty-state">🌱 No tasks yet — add one above.</li>`;
+  if (filtered.length === 0) {
+    const message =
+      tasks.length === 0
+        ? "🌱 No tasks yet — add one above."
+        : "No tasks match the selected priority filters.";
+    taskListEl.innerHTML = `<li class="empty-state">${message}</li>`;
     return;
   }
-  for (const task of tasks) {
+  for (const task of filtered) {
     const li = document.createElement("li");
     taskListEl.appendChild(li);
     renderViewMode(li, task);
@@ -175,15 +233,19 @@ function renderTasks(tasks) {
 async function refresh() {
   statusMessageEl.textContent = "Loading…";
   try {
-    const tasks = await listTasks();
+    allTasks = await listTasks();
     statusMessageEl.textContent = "";
-    renderTasks(tasks);
+    renderTasks(allTasks);
   } catch (err) {
     statusMessageEl.textContent = "";
     formErrorEl.textContent = err.message;
     formErrorEl.classList.remove("hidden");
   }
 }
+
+priorityFilterCheckboxes.forEach((checkbox) =>
+  checkbox.addEventListener("change", () => renderTasks(allTasks))
+);
 
 formEl.addEventListener("submit", async (event) => {
   event.preventDefault();
@@ -192,9 +254,10 @@ formEl.addEventListener("submit", async (event) => {
   const title = document.getElementById("task-title").value;
   const description = document.getElementById("task-description").value;
   const status = document.getElementById("task-status").value;
+  const priority = document.getElementById("task-priority").value;
 
   try {
-    await createTask({ title, description, status });
+    await createTask({ title, description, status, priority });
     formEl.reset();
     await refresh();
   } catch (err) {

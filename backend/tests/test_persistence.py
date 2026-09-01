@@ -23,7 +23,7 @@ def test_data_survives_reopening_the_database(monkeypatch):
     try:
         first_conn = get_connection()
         init_db(first_conn)
-        create_task(first_conn, TaskCreate(title="Survive restart"))
+        create_task(first_conn, TaskCreate(title="Survive restart", priority="medium"))
         first_conn.close()
 
         second_conn = get_connection()
