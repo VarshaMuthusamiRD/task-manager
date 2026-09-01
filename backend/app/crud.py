@@ -16,10 +16,10 @@ def create_task(conn: sqlite3.Connection, task: TaskCreate) -> dict:
     now = _now_iso()
     cursor = conn.execute(
         """
-        INSERT INTO tasks (title, description, status, created_at, updated_at)
-        VALUES (?, ?, ?, ?, ?)
+        INSERT INTO tasks (title, description, status, priority, created_at, updated_at)
+        VALUES (?, ?, ?, ?, ?, ?)
         """,
-        (task.title, task.description, task.status.value, now, now),
+        (task.title, task.description, task.status.value, task.priority.value, now, now),
     )
     conn.commit()
     return get_task(conn, cursor.lastrowid)
@@ -40,10 +40,10 @@ def update_task(conn: sqlite3.Connection, task_id: int, task: TaskUpdate) -> dic
         return None
     conn.execute(
         """
-        UPDATE tasks SET title = ?, description = ?, status = ?, updated_at = ?
+        UPDATE tasks SET title = ?, description = ?, status = ?, priority = ?, updated_at = ?
         WHERE id = ?
         """,
-        (task.title, task.description, task.status.value, _now_iso(), task_id),
+        (task.title, task.description, task.status.value, task.priority.value, _now_iso(), task_id),
     )
     conn.commit()
     return get_task(conn, task_id)
