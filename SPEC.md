@@ -61,8 +61,10 @@ Responses:
 ### `PUT /tasks/{id}`
 Update a task. Full-replace of the mutable fields (`title`, `description`, `status`, `priority`); `id` and `created_at` are immutable, `updated_at` is refreshed server-side.
 
-Request body: same shape as create; `title` and `priority` are still required — there
-is no partial-update semantics.
+Request body: same shape as create; `title` and `priority` are still required with no
+default. `description` and `status` fall back to their create-time defaults (`""` and
+`todo`) if omitted, same as on create — there is no partial-update semantics; omitted
+optional fields are reset, not left unchanged.
 
 Responses:
 - `200 OK` — the updated task.
@@ -85,8 +87,9 @@ variable mismatches made it unworkable to verify end-to-end during development �
 ## Persistence
 SQLite file at `backend/data/tasks.db` (git-ignored). Schema created automatically on
 first startup if the file/table doesn't exist. No migrations framework — schema
-changes for this project are additive and handled by startup-time `CREATE TABLE IF
-NOT EXISTS`.
+changes for this project are additive, handled by startup-time `CREATE TABLE IF NOT
+EXISTS` plus targeted `ALTER TABLE ADD COLUMN` statements for fields (like `priority`)
+added after initial release, run idempotently on every request via `init_db()`.
 
 ## Out of scope
 - Multi-user accounts, per-user task ownership/assignment
