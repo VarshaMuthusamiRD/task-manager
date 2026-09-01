@@ -77,7 +77,7 @@ const DELETE_ICON =
   '<svg viewBox="0 0 20 20" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M5 6h10M8 6V4.5A1.5 1.5 0 019.5 3h1A1.5 1.5 0 0112 4.5V6m-6 0v9a1 1 0 001 1h6a1 1 0 001-1V6"/></svg>';
 
 function renderViewMode(li, task) {
-  li.className = `task-item status-${task.status}`;
+  li.className = `task-item status-${task.status} priority-${task.priority}`;
   li.innerHTML = `
     <span
       class="task-checkbox"
@@ -90,12 +90,16 @@ function renderViewMode(li, task) {
       <strong>${escapeHtml(task.title)}</strong>
       ${task.description ? `<span class="description">${escapeHtml(task.description)}</span>` : ""}
     </div>
+    <select class="priority-select" data-priority="${task.priority}" aria-label="Change priority">${priorityOptionsHtml(task.priority)}</select>
     <select class="status-select" data-status="${task.status}" aria-label="Change status">${statusOptionsHtml(task.status)}</select>
     <div class="task-actions">
       <button type="button" class="edit-btn" aria-label="Edit task">${EDIT_ICON}</button>
       <button type="button" class="delete-btn" aria-label="Delete task">${DELETE_ICON}</button>
     </div>
   `;
+  li.querySelector(".priority-select").addEventListener("change", (e) =>
+    handlePriorityChange(task, e.target.value)
+  );
   li.querySelector(".status-select").addEventListener("change", (e) =>
     handleStatusChange(task, e.target.value)
   );
@@ -122,14 +126,19 @@ function renderEditMode(li, task) {
   li.querySelector(".save-btn").addEventListener("click", () => {
     const title = li.querySelector(".edit-title").value;
     const description = li.querySelector(".edit-description").value;
-    handleSaveEdit(li, task, { title, description, status: task.status });
+    handleSaveEdit(li, task, { title, description, status: task.status, priority: task.priority });
   });
   li.querySelector(".cancel-btn").addEventListener("click", () => renderViewMode(li, task));
 }
 
 async function handleStatusChange(task, status) {
   try {
-    await updateTask(task.id, { title: task.title, description: task.description, status });
+    await updateTask(task.id, {
+      title: task.title,
+      description: task.description,
+      status,
+      priority: task.priority,
+    });
     await refresh();
   } catch (err) {
     statusMessageEl.textContent = err.message;
@@ -139,6 +148,20 @@ async function handleStatusChange(task, status) {
 function handleToggleDone(task) {
   const nextStatus = task.status === "done" ? "todo" : "done";
   return handleStatusChange(task, nextStatus);
+}
+
+async function handlePriorityChange(task, priority) {
+  try {
+    await updateTask(task.id, {
+      title: task.title,
+      description: task.description,
+      status: task.status,
+      priority,
+    });
+    await refresh();
+  } catch (err) {
+    statusMessageEl.textContent = err.message;
+  }
 }
 
 async function handleSaveEdit(li, task, updatedFields) {

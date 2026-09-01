@@ -343,6 +343,10 @@ h1 {
   opacity: 1;
 }
 
+.task-item.priority-high {
+  border-left-width: 6px;
+}
+
 .task-item.editing {
   flex-wrap: wrap;
 }
@@ -432,6 +436,42 @@ h1 {
 .status-select[data-status="done"] {
   background-color: var(--color-surface-container-high);
   color: var(--color-on-surface-variant);
+}
+
+.priority-select {
+  appearance: none;
+  border: 1px solid var(--color-outline-variant);
+  border-radius: var(--radius-pill);
+  padding: 4px 26px 4px 12px;
+  font-size: 0.7rem;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  cursor: pointer;
+  background-color: var(--color-surface-container);
+  color: var(--color-on-surface);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%236b8778' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 6px center;
+  background-size: 12px;
+  flex-shrink: 0;
+}
+
+.priority-select[data-priority="low"] {
+  background-color: var(--color-surface-container-high);
+  color: var(--color-primary-hover);
+  border-color: var(--color-primary-fixed);
+}
+
+.priority-select[data-priority="medium"] {
+  background-color: var(--color-tertiary-bg);
+  color: var(--color-tertiary);
+  border-color: var(--color-tertiary-border);
+}
+
+.priority-select[data-priority="high"] {
+  background-color: #fee2e2;
+  color: var(--color-error);
+  border-color: #fca5a5;
 }
 
 .task-actions {
